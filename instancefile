@@ -1,0 +1,389 @@
+  https://github.com/Cloud-Yeti/aws-ec2-course
+
+Interfaces to ec2
+
+you can interfare with EC2 resource using following meduims
+
+1 AWS managment console
+2 AWS CLI
+3 AWS Cloudformation
+4 AWS SDK(boto,node,java)
+5 AWS REST API
+----------------------------------------
+
+EC2 Autoscaling
+automatic increse the number of instance during demand spikes to maintain perfoemance
+and decrease capacity during lulls to reduce cost
+----------------------------------------
+
+Apache web server
+https://httpd.apache.org
+
+it can host websites on it. it is 20 years old
+ 
+*install apache web server
+ sudo yum -y install httpd
+
+*start HTTPD service
+ sudo service httpd start
+
+*enable HTTPD server on startup
+ systemctl enable httpd
+ sudo chkconfig httpd on
+
+*create a simple custom index page on var/www/html
+ echo "EC2 Linux Instance">/var/www/html/index.html
+
+*to see content on bash
+ cat /var/www/html/index.html 
+
+
+
+-----------------------------------------
+custom AMI from an instance
+
+action > image > create image
+ image will be created and status will be available. you can launch it from there.
+
+-----------------------------------------
+EC2 permission with access key and roles
+
+*create bucket
+ aws s3 mb s3://ec2-bucketname
+
+ aws configure
+
+*region
+ us-east-1
+
+*to see buckets
+ aws s3 ls
+
+*to see credentials
+ cat ~/.aws/credentials
+
+*to remove credentials
+ rm ~/.aws/credentials
+
+*to download all data from bucket
+ aws s3 sync s3://bucketname
+
+*command to change region
+ aws configure --region <region name>
+ {us-east-1}
+
+*to find active roles on running instance
+ curl 169.254.169.254/latest/meta-data/iam/security-credentials/
+ 
+*to see temp access key and id for active roles
+ curl 169.254.169.254/latest/meta-data/iam/security-credentials/<name of role>/
+
+-----------------------------------------
+AWS Command Line Interface Commands
+
+https://aws.amazon.com/cli/
+
+*command to run instance
+ aws ec2 run-instances --image-id ami-0080e4c5bc078760e --instance-type t2.micro --region us-east-1
+
+*to check running instances
+ aws ec2 describe-instances
+
+*public ip addresses of running instances
+ aws ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress'
+
+*describe and filter to show only window instances
+ aws ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' --filters "Name=platform,Values=windows"
+
+*aws stop instance
+ aws ec2 stop-instances --instance-ids i-of4cc9edd6241f1f9
+
+*aws terminate instances
+ aws ec2 terminate-instances --instance-ids i-of4cc9edd6241f1f9
+
+-----------------------------------------
+SSH with password instead of ssh keys and EC2 userdata
+
+*change password for ec2-user
+ sudo passwd ec2-user
+
+*update password auth in /etc/ssh/sshd_config.file
+ sudo vi /etc/ssh/sshd_config
+ PasswordAuthentication yes 
+
+*restart SSH service
+ sudo service sshd restart
+
+
+
+ automate password auth with user data - 
+
+ #!/bin/bash
+ sed 's/PasswordAuthentication no/PasswordAuthentication yes/' -i /etc/ssh/sshd_config
+ systemctl restart sshd
+ service sshd restart
+
+ #TODO: replace bob with your desired username
+ useradd bob
+ # TODO: replace password123 with desired password and change bob to your username chosen in useradd 
+ echo "password123" | passwd --stdin bob
+
+*command to connect in gitbash
+ ssh username@public-ip
+
+-----------------------------------------
+EC2 Monitoring
+
+install unified cloudwatch and monitor custom EC2 Metrics like-
+1. CPU utilization
+2. Network in/out
+3. Packets in/out
+4. Disk read/writes
+
+does not provide RAM utilization, you can create custom metrics to check RAM and Disk utilization.
+
+Find the cloudwatch agent download link here: 
+-https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/install-CloudWatch-Agent-on-first-instance.html
+
+Download the Cloudwatch Unified Agent. Find the right agent link for your OS by visiiting the above link
+-wget https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+
+*install the Cloudwatch Agent
+ sudo rpm -U ./amazon-cloudwatch-agent.rpm
+
+*configure the Cloudwatch agent with the help of a setup wizard:
+ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard
+
+*start the agent
+ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
+
+-----------------------------------------
+Collect apache logs in cloudwatch using cloudwatch agent
+
+*install and start a web server to generate some web traffic logs
+ sudo yum install httpd -y
+ sudo service httpd start
+
+-----------------------------------------
+Deploy web application on AWS cloud using EC2 Insance
+
+*commands-
+ - yum update -y
+ - yum install -y httpd
+ - systemctl status httpd
+ - mkdir {name of your directory}
+ - cd {name of directory}
+ - wget {https link of your project git file} 
+ - ls -lrt
+ - wget {paste the zip file link from git}
+ - ls -lrt // zip file will be visible
+ - unzip {name of the file in list}
+ - cd {to the unzip file}
+ - ls -lrt // all the zipped file will be visible
+ - mv * /var/www/html/
+ - cd /var/www/html
+ - ls -lrt 
+ - systemctl status httpd
+ - systemctl enable httpd
+ - systemctl start httpd 
+
+-----------------------------------------
+deploying angular js on ec2 instance
+
+sudo chmod 777 /var/www/html -R
+sudo yum install -y nodejs npm
+sudo npm install -g @angular/cli
+npm install 
+ng build
+
+-----------------------------------------
+java -version
+yum install java-1.8.0-openjdk
+sudo yum install java-1.8*
+yum install java-11
+alternatives --config java
+java-jar name-of-the-jar
+yum list installed
+rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+
+sudo service mysqld start
+systemctl status mysqld
+mysql -u root -p
+
+for mysql installation ec2
+https://saturncloud.io/blog/how-to-install-mysql-56-on-an-amazon-linux-machine/
+
+====================
+ubuntu machine 22.0 
+
+sudo apt-get update -y
+sudo ufw enable
+sudo ufw status
+sudo apt-get install apache2 -y
+sudo apt update -y
+sudo apt upgrade -y
+sudo ufw app list
+sudo ufw allow in "Apache Full"
+
+for mysql
+sudo apt install -y mysql-server
+apt install openjdk-11-jre-headless
+curl ifconfig.me
+
+ALTER USER 'userName'@'localhost' IDENTIFIED BY 'New-Password-Here';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'insert_password';
+mysql -u root -p
+
+sudo apt install -y spr
+
+-----------------------------------------
+sudo yum install java-17-amazon-corretto-headless
+
+Creating database in AWS RDS 
+
+ databaseName : employeeMS
+ userName : admin
+ password : Password
+ port : 3307
+ dbUrl : employeems.cwppn7gahtob.ap-south-1.rds.amazonaws.com
+
+Creating instance to run springboot in linux2
+ instancePublicIP : 15.207.223.77
+ 
+
+[Yesterday 4:03 PM] Ankit Prajapati
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::employeems1/*"
+        }
+    ]
+
+}
+
+------------------------------
+ docker build -t <jar name>.jar .
+ docker image ls
+ docker run -p 9060:8080 <jar name>.jar
+
+ Docker command
+ docker pull mongo:latest
+ docker run -d -p 27017:27017 --name anyName mongo:latest
+
+ apt update
+ docker attach <container-id>
+ winpty docker exec -it <container-id> //bin//sh
+ mongosh --username --password
+ db.logout()
+ use database_name
+ 
+ show dbs.
+use DATABASE_NAME.
+db.
+db.dropDatabase()
+db.createCollection(name)
+Show collections.
+db.COLLECTION_NAME.drop()
+>db.COLLECTION_NAME.find()
+
+
+
+==========================================
+
+version : '3.3'
+
+services:
+  microservice11:
+    image: ms1_image
+    build: microservice1/
+    container_name: ms1_container
+    ports:
+      - "9040:9040"
+    networks:
+      - networks1
+
+
+  microservice22:
+    image: ms2_image
+    build: microservice2/
+    container_name: ms2_container
+    ports:
+      - "9042:9042"
+    networks:
+      - networks1
+
+
+networks:
+  networks1:
+      driver: bridge
+
+
+
+
+
+========================================
+
+ docker pull mysql:latest
+ docker run -e MYSQL_ROOT_PASSWORD=password mysql_image
+ mysql -h 127.0.0.1 -P 3306 -u root
+
+==================================
+ docker pull mysql:5.7
+ docker network create <network-name>
+ docker network ls
+
+ docker exec -it <container-id> bash
+ mysql -u<username> -p<password>
+ mysql -u root -p
+
+ docker run -p 33061:33061 --name testingc3 --network ankit -e MYSQL_ROOT_PASSWORD=1234 -e MYSQL_DATABASE=expensetracker -e MYSQL_USER=sa -e MYSQL_PASSWORD=1234 -d a5b7ceed4074
+ docker run --network <network_name> --name <container_name> -p 9040:9040 -d <image_name>
+
+1 s pring.datasource.url=jdbc:mysql://<container-name>:3306/<database-name>
+ spring.datasource.username=sa
+ spring.datasource.password=1234
+
+INSERT INTO persons VALUES (1, jacob, ryan, 412, CA);
+
+========================================
+ Update the packages on your instance
+ [ec2-user ~]$ sudo yum update -y
+
+ Install Docker
+ [ec2-user ~]$ sudo yum install docker -y
+
+ Start the Docker Service
+ [ec2-user ~]$ sudo service docker start
+
+ Add the ec2-user to the docker group so you can execute Docker commands without using sudo.
+ [ec2-user ~]$ sudo usermod -a -G docker ec2-user
+
+ =================================================================
+ docker compose installation linux
+
+ sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m) -o /usr/bin/docker-compose && sudo chmod 755 /usr/bin/docker-compose && docker-compose --version
+ sudo chmod +x /usr/local/bin/docker-compose
+ docker-compose version
+ ==============
+ api call
+ http://ec2-15-207-100-248.ap-south-1.compute.amazonaws.com:8084/app/user/add
+ ==============
+ docker volume ls
+ ==============
+
+ steps to dockerize springboot app with mongo
+ 
+ 1 create spring boot app and maven clean and install it
+ 2 create snapshot or jar of the app in target folder
+ 3 build image of app using command: docker build -t <imagename> .
+ 4 pull mongo:latest and run it using command : docker run -d -p 27017:27017 --name anyName mongo:latest
+ 5 now mongo container is running
+ 6 run your spring app and link with running mongo container using command :
+   docker run -p 8080:8080 --name <springboot_container_you_want> --link <running_mongo_container_name>:<its_image_name> -d <springboot_app_image_name>
+ 7 call api using postman, data will be added and deleted from mongo DB
